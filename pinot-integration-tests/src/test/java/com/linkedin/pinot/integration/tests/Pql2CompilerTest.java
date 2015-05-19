@@ -1,5 +1,7 @@
 package com.linkedin.pinot.integration.tests;
 
+import com.linkedin.pinot.common.client.request.RequestConverter;
+import com.linkedin.pinot.common.request.BrokerRequest;
 import com.linkedin.pinot.pql.parsers.PQLCompiler;
 import com.linkedin.pinot.pql.parsers.Pql2Compiler;
 import java.io.File;
@@ -7,6 +9,7 @@ import java.io.FileReader;
 import java.io.LineNumberReader;
 import java.util.Collections;
 import java.util.HashMap;
+import org.json.JSONObject;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -37,13 +40,16 @@ public class Pql2CompilerTest {
         }
 
         // Skip ones that don't compile with Pinot 1
+        JSONObject jsonObject;
         try {
-          pql1Compiler.compile(pql);
+          jsonObject = pql1Compiler.compile(pql);
         } catch (Exception e) {
           continue;
         }
 
-        pql2Compiler.compilePql(pql);
+        BrokerRequest pqlBrokerRequest = RequestConverter.fromJSON(jsonObject);
+        BrokerRequest pql2BrokerRequest = pql2Compiler.compileToBrokerRequest(pql);
+        Assert.assertEquals(pqlBrokerRequest, pql2BrokerRequest);
       } catch (Exception e) {
         Assert.fail("Caught exception compiling " + pql, e);
       }
@@ -62,20 +68,18 @@ public class Pql2CompilerTest {
     while (line != null) {
       if (!line.contains("com.senseidb.ba")) {
         try {
-
           // Skip ones that don't compile with Pinot 1
+          JSONObject jsonObject;
           try {
-            pql1Compiler.compile(line);
+            jsonObject = pql1Compiler.compile(line);
           } catch (Exception e) {
-            line = reader.readLine();
             continue;
           }
 
-          pql2Compiler.compilePql(line);
+          BrokerRequest pqlBrokerRequest = RequestConverter.fromJSON(jsonObject);
+          BrokerRequest pql2BrokerRequest = pql2Compiler.compileToBrokerRequest(line);
+          Assert.assertEquals(pqlBrokerRequest, pql2BrokerRequest);
         } catch (Exception e) {
-          /*failedQueries++;
-          System.out.println("Failed query " + line);
-          e.printStackTrace();*/
           Assert.fail("failed query " + line, e);
         }
       }

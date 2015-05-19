@@ -15,7 +15,9 @@
  */
 package com.linkedin.pinot.pql.parsers.pql2;
 
+import com.linkedin.pinot.common.request.BrokerRequest;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -43,15 +45,58 @@ public abstract class AstNode {
     _children.add(childNode);
   }
 
-  public void seal() {
+  public void doneProcessingChildren() {
+  }
+
+  public void doneProcessingSiblings() {
   }
 
   public AstNode getParent() {
     return _parent;
   }
 
+  public void setParent(AstNode parent) {
+    _parent = parent;
+  }
+
+  public void reparent(AstNode newParent) {
+    if (_parent != null && _parent.hasChildren()) {
+      _parent._children.remove(this);
+    }
+    if (newParent != null) {
+      newParent.addChild(this);
+      _parent = newParent;
+    }
+  }
+
   public boolean hasParent() {
     return _parent != null;
+  }
+
+  public void updateBrokerRequest(BrokerRequest brokerRequest) {
+  }
+
+  protected void moveSiblingsAsChildren() {
+    System.out.println("Moving siblings as children");
+    if (hasParent()) {
+      List<AstNode> siblings = getParent().getChildren();
+      List<AstNode> siblingsCopy = new ArrayList<AstNode>(siblings);
+      Collections.copy(siblingsCopy, siblings);
+
+      for (AstNode sibling : siblingsCopy) {
+        if (sibling != this) {
+          sibling.reparent(this);
+        }
+      }
+    }
+  }
+
+  protected void sendBrokerRequestUpdateToChildren(BrokerRequest brokerRequest) {
+    if (hasChildren()) {
+      for (AstNode child : _children) {
+        child.updateBrokerRequest(brokerRequest);
+      }
+    }
   }
 
   public String toString(int indent) {

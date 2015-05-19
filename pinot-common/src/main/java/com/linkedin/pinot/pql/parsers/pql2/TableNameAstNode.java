@@ -22,12 +22,24 @@ package com.linkedin.pinot.pql.parsers.pql2;
  */
 public class TableNameAstNode extends AstNode {
   private String _tableName;
+  private String _resourceName;
 
   public TableNameAstNode(String tableName) {
-    _tableName = tableName;
+    int firstDotIndex = tableName.indexOf('.');
+    if (firstDotIndex == -1) {
+      _tableName = tableName;
+      _resourceName = tableName;
+    } else {
+      _resourceName = tableName.substring(0, firstDotIndex);
+      _tableName = tableName.substring(firstDotIndex + 1);
+    }
   }
 
   public String getTableName() {
     return _tableName;
+  }
+
+  public String getResourceName() {
+    return _resourceName;
   }
 }

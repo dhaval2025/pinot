@@ -15,6 +15,7 @@
  */
 package com.linkedin.pinot.pql.parsers;
 
+import com.linkedin.pinot.common.request.BrokerRequest;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -57,6 +58,11 @@ public class PQLCompiler extends AbstractCompiler {
     // printTree(ast);
     // System.out.println(">>> json = " + json.toString());
     return json;
+  }
+
+  @Override
+  public BrokerRequest compileToBrokerRequest(String expression) {
+    return null;
   }
 
   @Override

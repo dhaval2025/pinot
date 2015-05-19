@@ -16,6 +16,9 @@
 package com.linkedin.pinot.pql.parsers;
 
 import com.linkedin.pinot.pql.parsers.pql2.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Stack;
 import org.antlr.v4.runtime.misc.NotNull;
 
@@ -44,12 +47,26 @@ public class Pql2AstListener extends PQL2BaseListener {
       parentNode.addChild(node);
     }
 
+    node.setParent(parentNode);
+
     _nodeStack.push(node);
   }
 
   private void popNode() {
     AstNode topNode = _nodeStack.pop();
-    topNode.seal();
+
+    // We clone the children list as it can be mutated by the doneProcessingSiblings call
+    if (topNode.hasChildren()) {
+      List<AstNode> originalChildrenList = topNode.getChildren();
+      List<AstNode> children = new ArrayList<AstNode>(originalChildrenList);
+      Collections.copy(children, originalChildrenList);
+
+      for (AstNode child : children) {
+        child.doneProcessingSiblings();
+      }
+    }
+
+    topNode.doneProcessingChildren();
   }
 
   public AstNode getRootNode() {

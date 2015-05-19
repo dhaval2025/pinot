@@ -21,4 +21,8 @@ package com.linkedin.pinot.pql.parsers.pql2;
  * @author jfim
  */
 public class OrOperandAstNode extends AstNode {
+  @Override
+  public void doneProcessingSiblings() {
+    moveSiblingsAsChildren();
+  }
 }

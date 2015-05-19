@@ -15,7 +15,9 @@
  */
 package com.linkedin.pinot.pql.parsers;
 
+import com.linkedin.pinot.common.request.BrokerRequest;
 import com.linkedin.pinot.pql.parsers.pql2.AstNode;
+import org.antlr.runtime.RecognitionException;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.CharStream;
@@ -25,6 +27,7 @@ import org.antlr.v4.runtime.TokenStream;
 import org.antlr.v4.runtime.UnbufferedTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
+import org.json.JSONObject;
 
 
 /**
@@ -32,7 +35,7 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
  *
  * @author jfim
  */
-public class Pql2Compiler {
+public class Pql2Compiler extends AbstractCompiler {
   public void compilePql(String pql) {
     CharStream charStream = new ANTLRInputStream(pql);
     PQL2Lexer lexer = new PQL2Lexer(charStream);
@@ -55,5 +58,41 @@ public class Pql2Compiler {
   public static void main(String[] args) {
     Pql2Compiler compiler = new Pql2Compiler();
     compiler.compilePql("select * from foo where a = 1 + 1 and b between 4 and 42 top 15");
+  }
+
+  @Override
+  public JSONObject compile(String expression)
+      throws RecognitionException {
+    return null;
+  }
+
+  @Override
+  public BrokerRequest compileToBrokerRequest(String expression) {
+    //
+    CharStream charStream = new ANTLRInputStream(expression);
+    PQL2Lexer lexer = new PQL2Lexer(charStream);
+    lexer.setTokenFactory(new CommonTokenFactory(true));
+    TokenStream tokenStream = new UnbufferedTokenStream<CommonToken>(lexer);
+    PQL2Parser parser = new PQL2Parser(tokenStream);
+    parser.setErrorHandler(new BailErrorStrategy());
+
+    // Parse
+    ParseTree parseTree = parser.root();
+
+    ParseTreeWalker walker = new ParseTreeWalker();
+    Pql2AstListener listener = new Pql2AstListener();
+    walker.walk(listener, parseTree);
+
+    AstNode rootNode = listener.getRootNode();
+    System.out.println(rootNode.toString(0));
+
+    BrokerRequest brokerRequest = new BrokerRequest();
+    rootNode.updateBrokerRequest(brokerRequest);
+    return brokerRequest;
+  }
+
+  @Override
+  public String getErrorMessage(RecognitionException error) {
+    return null;
   }
 }

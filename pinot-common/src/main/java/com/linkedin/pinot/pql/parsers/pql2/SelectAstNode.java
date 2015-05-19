@@ -15,6 +15,10 @@
  */
 package com.linkedin.pinot.pql.parsers.pql2;
 
+import com.linkedin.pinot.common.request.BrokerRequest;
+import com.linkedin.pinot.common.request.QuerySource;
+
+
 /**
  * TODO Document me!
  *
@@ -22,6 +26,7 @@ package com.linkedin.pinot.pql.parsers.pql2;
  */
 public class SelectAstNode extends AstNode {
   private String _tableName;
+  private String _resourceName;
 
   public SelectAstNode() {
   }
@@ -31,6 +36,7 @@ public class SelectAstNode extends AstNode {
     if (childNode instanceof TableNameAstNode) {
       TableNameAstNode node = (TableNameAstNode) childNode;
       _tableName = node.getTableName();
+      _resourceName = node.getResourceName();
     } else {
       super.addChild(childNode);
     }
@@ -40,6 +46,16 @@ public class SelectAstNode extends AstNode {
   public String toString() {
     return "SelectAstNode{" +
         "_tableName='" + _tableName + '\'' +
+        ", _resourceName='" + _resourceName + '\'' +
         '}';
+  }
+
+  @Override
+  public void updateBrokerRequest(BrokerRequest brokerRequest) {
+    QuerySource querySource = new QuerySource();
+    querySource.setResourceName(_resourceName);
+    querySource.setTableName(_tableName);
+    brokerRequest.setQuerySource(querySource);
+    sendBrokerRequestUpdateToChildren(brokerRequest);
   }
 }

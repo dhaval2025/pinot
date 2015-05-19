@@ -53,7 +53,7 @@ expressions:
 binaryMathOperator: '+' | '-' | '*' | '/';
 
 function: IDENTIFIER;
-tableName: IDENTIFIER | STRING_LITERAL;
+tableName: IDENTIFIER | IDENTIFIER '.' IDENTIFIER | STRING_LITERAL;
 
 literal:
   STRING_LITERAL            # StringLiteral
