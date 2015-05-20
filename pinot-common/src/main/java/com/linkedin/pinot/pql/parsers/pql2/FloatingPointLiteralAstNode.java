@@ -20,5 +20,9 @@ package com.linkedin.pinot.pql.parsers.pql2;
  *
  * @author jfim
  */
-public class FloatingPointLiteralAstNode extends AstNode {
+public class FloatingPointLiteralAstNode extends LiteralAstNode {
+  @Override
+  public String getValueAsString() {
+    throw new AssertionError("Unimplemented!");
+  }
 }

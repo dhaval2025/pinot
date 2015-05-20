@@ -299,7 +299,14 @@ public class Pql2AstListener extends PQL2BaseListener {
 
   @Override
   public void enterLimit(@NotNull PQL2Parser.LimitContext ctx) {
-    pushNode(new LimitAstNode(Integer.parseInt(ctx.getChild(0).getChild(1).getText())));
+    // Can either be LIMIT <maxRows> or LIMIT <offset>, <maxRows> (the second is a MySQL syntax extension)
+    if (ctx.getChild(0).getChildCount() == 2)
+      pushNode(new LimitAstNode(Integer.parseInt(ctx.getChild(0).getChild(1).getText())));
+    else
+      pushNode(new LimitAstNode(
+          Integer.parseInt(ctx.getChild(0).getChild(3).getText()),
+          Integer.parseInt(ctx.getChild(0).getChild(1).getText())
+      ));
   }
 
   @Override
@@ -328,22 +335,12 @@ public class Pql2AstListener extends PQL2BaseListener {
   }
 
   @Override
-  public void enterOrOperand(@NotNull PQL2Parser.OrOperandContext ctx) {
-    pushNode(new OrOperandAstNode());
+  public void enterBooleanPredicateOp(@NotNull PQL2Parser.BooleanPredicateOpContext ctx) {
+    pushNode(new BooleanPredicateOpAstNode(ctx.getChild(1).getText()));
   }
 
   @Override
-  public void exitOrOperand(@NotNull PQL2Parser.OrOperandContext ctx) {
-    popNode();
-  }
-
-  @Override
-  public void enterAndOperand(@NotNull PQL2Parser.AndOperandContext ctx) {
-    pushNode(new AndOperandAstNode());
-  }
-
-  @Override
-  public void exitAndOperand(@NotNull PQL2Parser.AndOperandContext ctx) {
+  public void exitBooleanPredicateOp(@NotNull PQL2Parser.BooleanPredicateOpContext ctx) {
     popNode();
   }
 }

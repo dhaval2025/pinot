@@ -2,6 +2,7 @@ package com.linkedin.pinot.integration.tests;
 
 import com.linkedin.pinot.common.client.request.RequestConverter;
 import com.linkedin.pinot.common.request.BrokerRequest;
+import com.linkedin.pinot.common.utils.BrokerRequestUtils;
 import com.linkedin.pinot.pql.parsers.PQLCompiler;
 import com.linkedin.pinot.pql.parsers.Pql2Compiler;
 import java.io.File;
@@ -76,9 +77,11 @@ public class Pql2CompilerTest {
             continue;
           }
 
+          System.out.println("line = " + line);
           BrokerRequest pqlBrokerRequest = RequestConverter.fromJSON(jsonObject);
           BrokerRequest pql2BrokerRequest = pql2Compiler.compileToBrokerRequest(line);
-          Assert.assertEquals(pqlBrokerRequest, pql2BrokerRequest);
+          Assert.assertTrue(BrokerRequestUtils.areEquivalent(pqlBrokerRequest, pql2BrokerRequest),
+              "Requests are not equivalent\npql2: " + pql2BrokerRequest + "\npql: " + pqlBrokerRequest);
         } catch (Exception e) {
           Assert.fail("failed query " + line, e);
         }

@@ -15,10 +15,35 @@
  */
 package com.linkedin.pinot.pql.parsers.pql2;
 
+import com.linkedin.pinot.common.request.BrokerRequest;
+import com.linkedin.pinot.common.request.Selection;
+import com.linkedin.pinot.common.request.SelectionSort;
+
+
 /**
  * TODO Document me!
  *
  * @author jfim
  */
 public class OrderByAstNode extends AstNode {
+  @Override
+  public void updateBrokerRequest(BrokerRequest brokerRequest) {
+    for (AstNode astNode : getChildren()) {
+      if (astNode instanceof IdentifierAstNode) {
+        Selection selections = brokerRequest.getSelections();
+        if (selections == null) {
+          selections = new Selection();
+          brokerRequest.setSelections(selections);
+        }
+
+        IdentifierAstNode node = (IdentifierAstNode) astNode;
+        SelectionSort elem = new SelectionSort();
+        elem.setColumn(node.getName());
+        elem.setIsAsc(false);
+        selections.addToSelectionSortSequence(elem);
+      } else {
+        throw new AssertionError("Don't know how to proceed");
+      }
+    }
+  }
 }

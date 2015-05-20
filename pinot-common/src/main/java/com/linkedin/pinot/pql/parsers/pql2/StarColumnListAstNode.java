@@ -15,10 +15,21 @@
  */
 package com.linkedin.pinot.pql.parsers.pql2;
 
+import com.linkedin.pinot.common.request.BrokerRequest;
+import com.linkedin.pinot.common.request.Selection;
+import java.util.Collections;
+
+
 /**
  * TODO Document me!
  *
  * @author jfim
  */
 public class StarColumnListAstNode extends AstNode {
+  @Override
+  public void updateBrokerRequest(BrokerRequest brokerRequest) {
+    Selection selection = new Selection();
+    selection.setSelectionColumns(Collections.singletonList("*"));
+    brokerRequest.setSelections(selection);
+  }
 }

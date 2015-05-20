@@ -15,10 +15,35 @@
  */
 package com.linkedin.pinot.pql.parsers.pql2;
 
+import com.linkedin.pinot.common.request.BrokerRequest;
+import com.linkedin.pinot.common.request.Selection;
+
+
 /**
  * TODO Document me!
  *
  * @author jfim
  */
 public class OutputColumnAstNode extends AstNode {
+  @Override
+  public void updateBrokerRequest(BrokerRequest brokerRequest) {
+    for (AstNode astNode : getChildren()) {
+      // If the column is a function call, it must be an aggregation function
+      if (astNode instanceof FunctionCallAstNode) {
+        FunctionCallAstNode node = (FunctionCallAstNode) astNode;
+        brokerRequest.addToAggregationsInfo(node.buildAggregationInfo());
+      } else if (astNode instanceof IdentifierAstNode) {
+        Selection selection = brokerRequest.getSelections();
+        if (selection == null) {
+          selection = new Selection();
+          brokerRequest.setSelections(selection);
+        }
+
+        IdentifierAstNode node = (IdentifierAstNode) astNode;
+        selection.addToSelectionColumns(node.getName());
+      } else {
+        throw new AssertionError("Don't know how to proceed");
+      }
+    }
+  }
 }

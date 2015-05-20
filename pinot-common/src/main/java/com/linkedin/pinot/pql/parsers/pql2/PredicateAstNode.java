@@ -15,14 +15,14 @@
  */
 package com.linkedin.pinot.pql.parsers.pql2;
 
+import com.linkedin.pinot.common.utils.request.FilterQueryTree;
+
+
 /**
- * FIXME Document me!
+ * TODO Document me!
  *
  * @author jfim
  */
-public class OrOperandAstNode extends AstNode {
-  @Override
-  public void doneProcessingSiblings() {
-    moveSiblingsAsChildren();
-  }
+public abstract class PredicateAstNode extends AstNode {
+  public abstract FilterQueryTree buildFilterQueryTree();
 }

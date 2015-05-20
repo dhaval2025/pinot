@@ -61,16 +61,15 @@ literal:
   | FLOATING_POINT_LITERAL  # FloatingPointLiteral
   ;
 
-whereClause: WHERE predicateList;
-predicateList: predicate (booleanOperator predicate)*;
+whereClause: WHERE predicate;
 
 predicate:
-  '(' predicate ')'         # PredicateParenthesisGroup
-  | '(' predicateList ')'   # PredicateParenthesisGroup
-  | comparisonClause        # ComparisonPredicate
-  | inClause                # InPredicate
-  | betweenClause           # BetweenPredicate
-  | isClause                # IsPredicate
+  predicate booleanOperator predicate   # BooleanPredicateOp
+  | '(' predicate ')'                   # PredicateParenthesisGroup
+  | comparisonClause                    # ComparisonPredicate
+  | inClause                            # InPredicate
+  | betweenClause                       # BetweenPredicate
+  | isClause                            # IsPredicate
   ;
 
 inClause:
@@ -86,15 +85,12 @@ comparisonOperator: '<' | '>' | '<>' | '<=' | '>=' | '=';
 betweenClause:
   expression BETWEEN expression AND expression;
 
-booleanOperator:
-  OR          # OrOperand
-  | AND       # AndOperand
-  ;
+booleanOperator: OR | AND;
 
 groupByClause: GROUP BY groupByList;
 groupByList: expression (',' expression)*;
 
-havingClause: HAVING predicateList;
+havingClause: HAVING predicate;
 
 orderByClause: ORDER BY orderByList;
 orderByList: expression ordering? (',' expression ordering?)*;

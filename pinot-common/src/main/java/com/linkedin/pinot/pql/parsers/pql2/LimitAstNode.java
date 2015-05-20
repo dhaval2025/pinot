@@ -22,20 +22,31 @@ package com.linkedin.pinot.pql.parsers.pql2;
  */
 public class LimitAstNode extends AstNode {
   private final int _count;
+  private final int _offset;
 
   public LimitAstNode(int count) {
     _count = count;
+    _offset = 0;
+  }
+
+  public LimitAstNode(int count, int offset) {
+    _count = count;
+    _offset = offset;
   }
 
   public int getCount() {
     return _count;
   }
 
+  public int getOffset() {
+    return _offset;
+  }
+
   @Override
   public String toString() {
-    final StringBuilder sb = new StringBuilder("LimitAstNode{");
-    sb.append("_count=").append(_count);
-    sb.append('}');
-    return sb.toString();
+    return "LimitAstNode{" +
+        "_count=" + _count +
+        ", _offset=" + _offset +
+        '}';
   }
 }

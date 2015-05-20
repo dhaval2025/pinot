@@ -17,6 +17,7 @@ package com.linkedin.pinot.pql.parsers.pql2;
 
 import com.linkedin.pinot.common.request.BrokerRequest;
 import com.linkedin.pinot.common.request.QuerySource;
+import com.linkedin.pinot.common.request.Selection;
 
 
 /**
@@ -27,13 +28,19 @@ import com.linkedin.pinot.common.request.QuerySource;
 public class SelectAstNode extends AstNode {
   private String _tableName;
   private String _resourceName;
+  private int _recordLimit = -1;
+  private int _offset = -1;
 
   public SelectAstNode() {
   }
 
   @Override
   public void addChild(AstNode childNode) {
-    if (childNode instanceof TableNameAstNode) {
+    if (childNode instanceof LimitAstNode) {
+      LimitAstNode node = (LimitAstNode) childNode;
+      _recordLimit = node.getCount();
+      _offset = node.getOffset();
+    } else if (childNode instanceof TableNameAstNode) {
       TableNameAstNode node = (TableNameAstNode) childNode;
       _tableName = node.getTableName();
       _resourceName = node.getResourceName();
@@ -47,15 +54,29 @@ public class SelectAstNode extends AstNode {
     return "SelectAstNode{" +
         "_tableName='" + _tableName + '\'' +
         ", _resourceName='" + _resourceName + '\'' +
+        ", _recordLimit=" + _recordLimit +
+        ", _offset=" + _offset +
         '}';
   }
 
   @Override
   public void updateBrokerRequest(BrokerRequest brokerRequest) {
+    // Set the query source
     QuerySource querySource = new QuerySource();
     querySource.setResourceName(_resourceName);
-    querySource.setTableName(_tableName);
     brokerRequest.setQuerySource(querySource);
+
     sendBrokerRequestUpdateToChildren(brokerRequest);
+
+    // If there is a selection, set its limit if applicable
+    Selection selections = brokerRequest.getSelections();
+    if (selections != null) {
+      if (_recordLimit != -1) {
+        selections.setSize(_recordLimit);
+      }
+      if (_offset != -1) {
+        selections.setOffset(_offset);
+      }
+    }
   }
 }

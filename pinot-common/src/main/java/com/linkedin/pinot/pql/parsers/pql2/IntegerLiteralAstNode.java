@@ -20,7 +20,7 @@ package com.linkedin.pinot.pql.parsers.pql2;
  *
  * @author jfim
  */
-public class IntegerLiteralAstNode extends AstNode {
+public class IntegerLiteralAstNode extends LiteralAstNode {
   private final int _value;
 
   public IntegerLiteralAstNode(int value) {
@@ -37,5 +37,10 @@ public class IntegerLiteralAstNode extends AstNode {
     sb.append("_value=").append(_value);
     sb.append('}');
     return sb.toString();
+  }
+
+  @Override
+  public String getValueAsString() {
+    return Integer.toString(_value);
   }
 }

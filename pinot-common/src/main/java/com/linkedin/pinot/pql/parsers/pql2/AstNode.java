@@ -34,6 +34,14 @@ public abstract class AstNode {
     return _children;
   }
 
+  public List<AstNode> getChildrenCopy() {
+    if (_children != null) {
+      return new ArrayList<AstNode>(_children);
+    } else {
+      return null;
+    }
+  }
+
   public boolean hasChildren() {
     return _children != null && !_children.isEmpty();
   }
@@ -77,11 +85,12 @@ public abstract class AstNode {
   }
 
   protected void moveSiblingsAsChildren() {
-    System.out.println("Moving siblings as children");
+    System.out.println("About to move siblings as children");
+    System.out.println(getParent().toString(0));
+    System.out.println();
+
     if (hasParent()) {
-      List<AstNode> siblings = getParent().getChildren();
-      List<AstNode> siblingsCopy = new ArrayList<AstNode>(siblings);
-      Collections.copy(siblingsCopy, siblings);
+      List<AstNode> siblingsCopy = getParent().getChildrenCopy();
 
       for (AstNode sibling : siblingsCopy) {
         if (sibling != this) {
@@ -89,6 +98,9 @@ public abstract class AstNode {
         }
       }
     }
+    System.out.println("Finished moving siblings as children");
+    System.out.println(getParent().toString(0));
+    System.out.println();
   }
 
   protected void sendBrokerRequestUpdateToChildren(BrokerRequest brokerRequest) {

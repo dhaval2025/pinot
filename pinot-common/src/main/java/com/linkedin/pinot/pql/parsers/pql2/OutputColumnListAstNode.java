@@ -15,6 +15,9 @@
  */
 package com.linkedin.pinot.pql.parsers.pql2;
 
+import com.linkedin.pinot.common.request.BrokerRequest;
+
+
 /**
  * TODO Document me!
  *
@@ -34,5 +37,10 @@ public class OutputColumnListAstNode extends AstNode {
     } else {
       super.addChild(childNode);
     }
+  }
+
+  @Override
+  public void updateBrokerRequest(BrokerRequest brokerRequest) {
+    sendBrokerRequestUpdateToChildren(brokerRequest);
   }
 }

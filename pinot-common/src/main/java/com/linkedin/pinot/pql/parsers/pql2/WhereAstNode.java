@@ -15,10 +15,19 @@
  */
 package com.linkedin.pinot.pql.parsers.pql2;
 
+import com.linkedin.pinot.common.request.BrokerRequest;
+import com.linkedin.pinot.common.utils.request.RequestUtils;
+
+
 /**
  * TODO Document me!
  *
  * @author jfim
  */
 public class WhereAstNode extends AstNode {
+  @Override
+  public void updateBrokerRequest(BrokerRequest brokerRequest) {
+    PredicateAstNode predicateAstNode = (PredicateAstNode) getChildren().get(0);
+    RequestUtils.generateFilterFromTree(predicateAstNode.buildFilterQueryTree(), brokerRequest);
+  }
 }

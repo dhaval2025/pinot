@@ -15,6 +15,9 @@
  */
 package com.linkedin.pinot.pql.parsers.pql2;
 
+import com.linkedin.pinot.common.request.AggregationInfo;
+
+
 /**
  * TODO Document me!
  *
@@ -29,6 +32,30 @@ public class FunctionCallAstNode extends AstNode {
 
   public String getName() {
     return _name;
+  }
+
+  public AggregationInfo buildAggregationInfo() {
+    String identifier = null;
+    for (AstNode astNode : getChildren()) {
+      if (astNode instanceof IdentifierAstNode) {
+        IdentifierAstNode node = (IdentifierAstNode) astNode;
+        if (identifier == null) {
+          identifier = node.getName();
+        } else {
+          throw new AssertionError("Don't know how to proceed");
+        }
+      } else  if (astNode instanceof StarExpressionAstNode) {
+        identifier = "*";
+      } else {
+        throw new AssertionError("Don't know how to proceed");
+      }
+    }
+
+    AggregationInfo aggregationInfo = new AggregationInfo();
+    aggregationInfo.setAggregationType(_name);
+    aggregationInfo.putToAggregationParams("column", identifier);
+
+    return aggregationInfo;
   }
 
   @Override
