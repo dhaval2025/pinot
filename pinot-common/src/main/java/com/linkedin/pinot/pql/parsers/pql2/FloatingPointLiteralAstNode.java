@@ -21,8 +21,26 @@ package com.linkedin.pinot.pql.parsers.pql2;
  * @author jfim
  */
 public class FloatingPointLiteralAstNode extends LiteralAstNode {
+  private double value;
+
+  public FloatingPointLiteralAstNode(double value) {
+    this.value = value;
+  }
+
+  public double getValue() {
+    return value;
+  }
+
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder("FloatingPointLiteralAstNode{");
+    sb.append("value=").append(value);
+    sb.append('}');
+    return sb.toString();
+  }
+
   @Override
   public String getValueAsString() {
-    throw new AssertionError("Unimplemented!");
+    return Double.toString(value);
   }
 }

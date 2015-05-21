@@ -15,12 +15,19 @@
  */
 package com.linkedin.pinot.pql.parsers.pql2;
 
+import com.linkedin.pinot.common.request.FilterOperator;
+import com.linkedin.pinot.common.utils.request.FilterQueryTree;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.TreeSet;
+
+
 /**
  * TODO Document me!
  *
  * @author jfim
  */
-public class InPredicateAstNode extends AstNode {
+public class InPredicateAstNode extends PredicateAstNode {
   private String _identifier;
 
   @Override
@@ -43,5 +50,23 @@ public class InPredicateAstNode extends AstNode {
     sb.append("_identifier='").append(_identifier).append('\'');
     sb.append('}');
     return sb.toString();
+  }
+
+  @Override
+  public FilterQueryTree buildFilterQueryTree() {
+    TreeSet<String> values = new TreeSet<String>();
+
+    for (AstNode astNode : getChildren()) {
+      if (astNode instanceof LiteralAstNode) {
+        LiteralAstNode node = (LiteralAstNode) astNode;
+        values.add(node.getValueAsString());
+      }
+    }
+
+    if (1 < values.size()) {
+      return new FilterQueryTree(_identifier, Arrays.asList(values.toArray(new String[values.size()])), FilterOperator.IN, null);
+    } else {
+      return new FilterQueryTree(_identifier, Collections.singletonList(values.first()), FilterOperator.EQUALITY, null);
+    }
   }
 }

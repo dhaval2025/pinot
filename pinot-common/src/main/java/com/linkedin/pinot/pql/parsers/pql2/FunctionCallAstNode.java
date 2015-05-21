@@ -46,13 +46,25 @@ public class FunctionCallAstNode extends AstNode {
         }
       } else  if (astNode instanceof StarExpressionAstNode) {
         identifier = "*";
+      } else if (astNode instanceof StringLiteralAstNode) {
+        // Pinot quirk: Passing a string as an aggregation function is probably a column name
+        StringLiteralAstNode node = (StringLiteralAstNode) astNode;
+        identifier = node.getText();
       } else {
         throw new AssertionError("Don't know how to proceed");
       }
     }
 
+    String function = _name;
+
+    // Pinot quirk: count is always count(*) no matter what
+    if ("count".equalsIgnoreCase(function)) {
+      function = "count";
+      identifier = "*";
+    }
+
     AggregationInfo aggregationInfo = new AggregationInfo();
-    aggregationInfo.setAggregationType(_name);
+    aggregationInfo.setAggregationType(function);
     aggregationInfo.putToAggregationParams("column", identifier);
 
     return aggregationInfo;

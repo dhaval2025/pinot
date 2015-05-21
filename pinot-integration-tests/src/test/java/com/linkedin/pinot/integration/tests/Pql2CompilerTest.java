@@ -50,7 +50,8 @@ public class Pql2CompilerTest {
 
         BrokerRequest pqlBrokerRequest = RequestConverter.fromJSON(jsonObject);
         BrokerRequest pql2BrokerRequest = pql2Compiler.compileToBrokerRequest(pql);
-        Assert.assertEquals(pqlBrokerRequest, pql2BrokerRequest);
+        Assert.assertTrue(BrokerRequestUtils.areEquivalent(pqlBrokerRequest, pql2BrokerRequest),
+            "Requests are not equivalent\npql2: " + pql2BrokerRequest + "\npql: " + pqlBrokerRequest);
       } catch (Exception e) {
         Assert.fail("Caught exception compiling " + pql, e);
       }

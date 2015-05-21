@@ -28,18 +28,14 @@ import com.linkedin.pinot.common.request.SelectionSort;
 public class OrderByAstNode extends AstNode {
   @Override
   public void updateBrokerRequest(BrokerRequest brokerRequest) {
-    for (AstNode astNode : getChildren()) {
-      if (astNode instanceof IdentifierAstNode) {
-        Selection selections = brokerRequest.getSelections();
-        if (selections == null) {
-          selections = new Selection();
-          brokerRequest.setSelections(selections);
-        }
+    Selection selections = brokerRequest.getSelections();
 
-        IdentifierAstNode node = (IdentifierAstNode) astNode;
+    for (AstNode astNode : getChildren()) {
+      if (astNode instanceof OrderByExpressionAstNode) {
+        OrderByExpressionAstNode node = (OrderByExpressionAstNode) astNode;
         SelectionSort elem = new SelectionSort();
-        elem.setColumn(node.getName());
-        elem.setIsAsc(false);
+        elem.setColumn(node.getColumn());
+        elem.setIsAsc("asc".equalsIgnoreCase(node.getOrdering()));
         selections.addToSelectionSortSequence(elem);
       } else {
         throw new AssertionError("Don't know how to proceed");

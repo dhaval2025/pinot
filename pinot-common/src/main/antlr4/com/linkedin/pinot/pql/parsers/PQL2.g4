@@ -93,7 +93,8 @@ groupByList: expression (',' expression)*;
 havingClause: HAVING predicate;
 
 orderByClause: ORDER BY orderByList;
-orderByList: expression ordering? (',' expression ordering?)*;
+orderByList: orderByExpression (',' orderByExpression)*;
+orderByExpression: expression ordering?;
 ordering: DESC | ASC;
 
 topClause: TOP INTEGER_LITERAL;

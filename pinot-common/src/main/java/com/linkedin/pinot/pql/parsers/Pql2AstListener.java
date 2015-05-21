@@ -105,7 +105,6 @@ public class Pql2AstListener extends PQL2BaseListener {
 
   @Override
   public void enterOutputColumnList(@NotNull PQL2Parser.OutputColumnListContext ctx) {
-    // TODO
     pushNode(new OutputColumnListAstNode());
   }
 
@@ -116,7 +115,6 @@ public class Pql2AstListener extends PQL2BaseListener {
 
   @Override
   public void enterIsPredicate(@NotNull PQL2Parser.IsPredicateContext ctx) {
-    // TODO
     pushNode(new IsPredicateAstNode());
   }
 
@@ -127,7 +125,6 @@ public class Pql2AstListener extends PQL2BaseListener {
 
   @Override
   public void enterPredicateParenthesisGroup(@NotNull PQL2Parser.PredicateParenthesisGroupContext ctx) {
-    // TODO
     pushNode(new PredicateParenthesisGroupAstNode());
   }
 
@@ -148,7 +145,6 @@ public class Pql2AstListener extends PQL2BaseListener {
 
   @Override
   public void enterExpressionParenthesisGroup(@NotNull PQL2Parser.ExpressionParenthesisGroupContext ctx) {
-    // TODO
     pushNode(new ExpressionParenthesisGroupAstNode());
   }
 
@@ -159,7 +155,6 @@ public class Pql2AstListener extends PQL2BaseListener {
 
   @Override
   public void enterOutputColumn(@NotNull PQL2Parser.OutputColumnContext ctx) {
-    // TODO
     pushNode(new OutputColumnAstNode());
   }
 
@@ -200,7 +195,7 @@ public class Pql2AstListener extends PQL2BaseListener {
 
   @Override
   public void enterIntegerLiteral(@NotNull PQL2Parser.IntegerLiteralContext ctx) {
-    pushNode(new IntegerLiteralAstNode(Integer.parseInt(ctx.getText())));
+    pushNode(new IntegerLiteralAstNode(Long.parseLong(ctx.getText())));
   }
 
   @Override
@@ -210,7 +205,6 @@ public class Pql2AstListener extends PQL2BaseListener {
 
   @Override
   public void enterOrderBy(@NotNull PQL2Parser.OrderByContext ctx) {
-    // TODO
     pushNode(new OrderByAstNode());
   }
 
@@ -221,7 +215,6 @@ public class Pql2AstListener extends PQL2BaseListener {
 
   @Override
   public void enterGroupBy(@NotNull PQL2Parser.GroupByContext ctx) {
-    // TODO
     pushNode(new GroupByAstNode());
   }
 
@@ -253,7 +246,6 @@ public class Pql2AstListener extends PQL2BaseListener {
 
   @Override
   public void enterInPredicate(@NotNull PQL2Parser.InPredicateContext ctx) {
-    // TODO
     pushNode(new InPredicateAstNode());
   }
 
@@ -288,8 +280,7 @@ public class Pql2AstListener extends PQL2BaseListener {
 
   @Override
   public void enterFloatingPointLiteral(@NotNull PQL2Parser.FloatingPointLiteralContext ctx) {
-    // TODO
-    pushNode(new FloatingPointLiteralAstNode());
+    pushNode(new FloatingPointLiteralAstNode(Double.valueOf(ctx.getText())));
   }
 
   @Override
@@ -341,6 +332,20 @@ public class Pql2AstListener extends PQL2BaseListener {
 
   @Override
   public void exitBooleanPredicateOp(@NotNull PQL2Parser.BooleanPredicateOpContext ctx) {
+    popNode();
+  }
+
+  @Override
+  public void enterOrderByExpression(@NotNull PQL2Parser.OrderByExpressionContext ctx) {
+    if (ctx.getChildCount() == 1) {
+      pushNode(new OrderByExpressionAstNode(ctx.getChild(0).getText(), "asc"));
+    } else {
+      pushNode(new OrderByExpressionAstNode(ctx.getChild(0).getText(), ctx.getChild(1).getText()));
+    }
+  }
+
+  @Override
+  public void exitOrderByExpression(@NotNull PQL2Parser.OrderByExpressionContext ctx) {
     popNode();
   }
 }

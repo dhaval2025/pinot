@@ -70,4 +70,24 @@ public class BrokerRequestUtils {
     }
     return resourceName;
   }
+
+  public static boolean areEquivalent(BrokerRequest left, BrokerRequest right) {
+    boolean basicFieldsAreEquivalent = EqualityUtils.isEqual(left.getQueryType(), right.getQueryType()) &&
+            EqualityUtils.isEqual(left.getQuerySource(), right.getQuerySource()) &&
+            EqualityUtils.isEqual(left.getTimeInterval(), right.getTimeInterval()) &&
+            EqualityUtils.isEqual(left.getDuration(), right.getDuration()) &&
+            EqualityUtils.isEqual(left.getAggregationsInfo(), right.getAggregationsInfo()) &&
+              (
+                  EqualityUtils.isEqual(left.getGroupBy(), right.getGroupBy()) ||
+                      // Pinot quirk: group by clauses may not be in the same order
+                      (EqualityUtils.isEqualIgnoringOrder(left.getGroupBy().getColumns(), right.getGroupBy().getColumns()) &&
+                      EqualityUtils.isEqual(left.getGroupBy().getTopN(), right.getGroupBy().getTopN()))
+              ) &&
+            EqualityUtils.isEqual(left.getSelections(), right.getSelections()) &&
+            EqualityUtils.isEqual(left.getBucketHashKey(), right.getBucketHashKey());
+
+    // TODO Compare filter query map
+
+    return basicFieldsAreEquivalent;
+  }
 }

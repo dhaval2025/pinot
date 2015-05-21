@@ -15,10 +15,27 @@
  */
 package com.linkedin.pinot.pql.parsers.pql2;
 
+import com.linkedin.pinot.common.request.BrokerRequest;
+import com.linkedin.pinot.common.request.GroupBy;
+
+
 /**
  * TODO Document me!
  *
  * @author jfim
  */
 public class GroupByAstNode extends AstNode {
+  @Override
+  public void updateBrokerRequest(BrokerRequest brokerRequest) {
+    GroupBy groupBy = new GroupBy();
+    for (AstNode astNode : getChildren()) {
+      if (astNode instanceof IdentifierAstNode) {
+        IdentifierAstNode node = (IdentifierAstNode) astNode;
+        groupBy.addToColumns(node.getName());
+      } else {
+        throw new AssertionError("Don't know how to proceed");
+      }
+    }
+    brokerRequest.setGroupBy(groupBy);
+  }
 }

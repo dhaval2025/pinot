@@ -16,6 +16,7 @@
 package com.linkedin.pinot.pql.parsers.pql2;
 
 import com.linkedin.pinot.common.request.BrokerRequest;
+import com.linkedin.pinot.common.request.GroupBy;
 import com.linkedin.pinot.common.request.QuerySource;
 import com.linkedin.pinot.common.request.Selection;
 
@@ -30,6 +31,7 @@ public class SelectAstNode extends AstNode {
   private String _resourceName;
   private int _recordLimit = -1;
   private int _offset = -1;
+  private int _topN = -1;
 
   public SelectAstNode() {
   }
@@ -44,6 +46,9 @@ public class SelectAstNode extends AstNode {
       TableNameAstNode node = (TableNameAstNode) childNode;
       _tableName = node.getTableName();
       _resourceName = node.getResourceName();
+    } else if (childNode instanceof TopAstNode) {
+      TopAstNode node = (TopAstNode) childNode;
+      _topN = node.getCount();
     } else {
       super.addChild(childNode);
     }
@@ -77,6 +82,22 @@ public class SelectAstNode extends AstNode {
       if (_offset != -1) {
         selections.setOffset(_offset);
       }
+    }
+
+    // If there is a topN clause, set it on the group by
+    GroupBy groupBy = brokerRequest.getGroupBy();
+    if (groupBy != null) {
+      if (_topN != -1) {
+        groupBy.setTopN(_topN);
+      } else {
+        // Pinot quirk: default to top 10
+        groupBy.setTopN(10);
+      }
+    }
+
+    // Pinot quirk: if there is both a selection and an aggregation, remove the selection
+    if (brokerRequest.getAggregationsInfoSize() != 0 && brokerRequest.isSetSelections()) {
+      brokerRequest.setSelections(null);
     }
   }
 }

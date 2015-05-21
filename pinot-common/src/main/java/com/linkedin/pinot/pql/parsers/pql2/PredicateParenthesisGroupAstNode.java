@@ -15,10 +15,17 @@
  */
 package com.linkedin.pinot.pql.parsers.pql2;
 
+import com.linkedin.pinot.common.utils.request.FilterQueryTree;
+
+
 /**
  * TODO Document me!
  *
  * @author jfim
  */
-public class PredicateParenthesisGroupAstNode extends AstNode {
+public class PredicateParenthesisGroupAstNode extends PredicateAstNode {
+  @Override
+  public FilterQueryTree buildFilterQueryTree() {
+    return ((PredicateAstNode)getChildren().get(0)).buildFilterQueryTree();
+  }
 }

@@ -21,13 +21,13 @@ package com.linkedin.pinot.pql.parsers.pql2;
  * @author jfim
  */
 public class IntegerLiteralAstNode extends LiteralAstNode {
-  private final int _value;
+  private final long _value;
 
-  public IntegerLiteralAstNode(int value) {
+  public IntegerLiteralAstNode(long value) {
     _value = value;
   }
 
-  public int getValue() {
+  public long getValue() {
     return _value;
   }
 
@@ -41,6 +41,6 @@ public class IntegerLiteralAstNode extends LiteralAstNode {
 
   @Override
   public String getValueAsString() {
-    return Integer.toString(_value);
+    return Long.toString(_value);
   }
 }

@@ -15,12 +15,17 @@
  */
 package com.linkedin.pinot.pql.parsers.pql2;
 
+import com.linkedin.pinot.common.request.FilterOperator;
+import com.linkedin.pinot.common.utils.request.FilterQueryTree;
+import java.util.Collections;
+
+
 /**
  * TODO Document me!
  *
  * @author jfim
  */
-public class BetweenPredicateAstNode extends AstNode {
+public class BetweenPredicateAstNode extends PredicateAstNode {
   private String _identifier;
 
   @Override
@@ -43,5 +48,12 @@ public class BetweenPredicateAstNode extends AstNode {
     sb.append("_identifier='").append(_identifier).append('\'');
     sb.append('}');
     return sb.toString();
+  }
+
+  @Override
+  public FilterQueryTree buildFilterQueryTree() {
+    LiteralAstNode left = (LiteralAstNode) getChildren().get(0);
+    LiteralAstNode right = (LiteralAstNode) getChildren().get(1);
+    return new FilterQueryTree(_identifier, Collections.singletonList("[" + left + "\t\t" + right + "]"), FilterOperator.RANGE, null);
   }
 }
