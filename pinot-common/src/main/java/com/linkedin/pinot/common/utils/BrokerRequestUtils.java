@@ -15,8 +15,20 @@
  */
 package com.linkedin.pinot.common.utils;
 
+import com.linkedin.pinot.common.request.AggregationInfo;
+import com.linkedin.pinot.common.request.FilterOperator;
+import com.linkedin.pinot.common.request.FilterQuery;
+import com.linkedin.pinot.common.request.FilterQueryMap;
 import com.linkedin.pinot.common.utils.CommonConstants.Helix.TableType;
 import com.linkedin.pinot.common.request.BrokerRequest;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 @Deprecated
@@ -65,8 +77,8 @@ public class BrokerRequestUtils {
           - CommonConstants.Broker.DataResource.REALTIME_RESOURCE_SUFFIX.length());
     }
     if (resourceName.endsWith(CommonConstants.Broker.DataResource.OFFLINE_RESOURCE_SUFFIX)) {
-      return resourceName.substring(0, resourceName.length()
-          - CommonConstants.Broker.DataResource.OFFLINE_RESOURCE_SUFFIX.length());
+      return resourceName.substring(0,
+          resourceName.length() - CommonConstants.Broker.DataResource.OFFLINE_RESOURCE_SUFFIX.length());
     }
     return resourceName;
   }
@@ -76,18 +88,116 @@ public class BrokerRequestUtils {
             EqualityUtils.isEqual(left.getQuerySource(), right.getQuerySource()) &&
             EqualityUtils.isEqual(left.getTimeInterval(), right.getTimeInterval()) &&
             EqualityUtils.isEqual(left.getDuration(), right.getDuration()) &&
-            EqualityUtils.isEqual(left.getAggregationsInfo(), right.getAggregationsInfo()) &&
-              (
-                  EqualityUtils.isEqual(left.getGroupBy(), right.getGroupBy()) ||
-                      // Pinot quirk: group by clauses may not be in the same order
-                      (EqualityUtils.isEqualIgnoringOrder(left.getGroupBy().getColumns(), right.getGroupBy().getColumns()) &&
-                      EqualityUtils.isEqual(left.getGroupBy().getTopN(), right.getGroupBy().getTopN()))
-              ) &&
             EqualityUtils.isEqual(left.getSelections(), right.getSelections()) &&
             EqualityUtils.isEqual(left.getBucketHashKey(), right.getBucketHashKey());
 
-    // TODO Compare filter query map
+    boolean aggregationsAreEquivalent = true;
 
-    return basicFieldsAreEquivalent;
+    List<AggregationInfo> leftAggregationsInfo = left.getAggregationsInfo();
+    List<AggregationInfo> rightAggregationsInfo = right.getAggregationsInfo();
+    if (!EqualityUtils.isEqual(leftAggregationsInfo, rightAggregationsInfo)) {
+      if (leftAggregationsInfo == null || rightAggregationsInfo == null ||
+          leftAggregationsInfo.size() != rightAggregationsInfo.size()) {
+        aggregationsAreEquivalent = false;
+      } else {
+        int aggregationsInfoCount = leftAggregationsInfo.size();
+        for (int i = 0; i < aggregationsInfoCount; i++) {
+          AggregationInfo leftInfo = leftAggregationsInfo.get(i);
+          AggregationInfo rightInfo = rightAggregationsInfo.get(i);
+
+          // Check if the aggregationsInfo are the same or they're the count function
+          if (EqualityUtils.isEqual(leftInfo, rightInfo)) {
+            continue;
+          } else {
+            if ("count".equalsIgnoreCase(rightInfo.getAggregationType()) &&
+                "count".equalsIgnoreCase(leftInfo.getAggregationType())
+                ) {
+              continue;
+            } else {
+              aggregationsAreEquivalent = false;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    // Group by clauses might not be in the same order
+    boolean groupByClauseIsEquivalent = EqualityUtils.isEqual(left.getGroupBy(), right.getGroupBy());
+
+    if (!groupByClauseIsEquivalent) {
+      groupByClauseIsEquivalent =
+          (EqualityUtils.isEqualIgnoringOrder(left.getGroupBy().getColumns(), right.getGroupBy().getColumns()) &&
+              EqualityUtils.isEqual(left.getGroupBy().getTopN(), right.getGroupBy().getTopN()));
+    }
+
+    boolean filtersAreEquivalent = EqualityUtils.isEqual(left.isSetFilterQuery(), right.isSetFilterQuery());
+
+    if (left.isSetFilterQuery()) {
+      int leftRootId = left.getFilterQuery().getId();
+      int rightRootId = right.getFilterQuery().getId();
+      filtersAreEquivalent = filterQueryIsEquivalent(
+          Collections.singletonList(leftRootId),
+          Collections.singletonList(rightRootId),
+          left.getFilterSubQueryMap(),
+          right.getFilterSubQueryMap()
+      );
+    }
+
+    return basicFieldsAreEquivalent && aggregationsAreEquivalent && groupByClauseIsEquivalent && filtersAreEquivalent;
+  }
+
+  public static boolean filterQueryIsEquivalent(List<Integer> leftIds, List<Integer> rightIds,
+      FilterQueryMap leftFilterQueries, FilterQueryMap rightFilterQueries) {
+    if (leftIds.size() != rightIds.size()) {
+      return false;
+    }
+
+    ArrayList<Integer> leftIdsCopy = new ArrayList<Integer>(leftIds);
+    Iterator<Integer> leftIterator = leftIdsCopy.iterator();
+    while (leftIterator.hasNext()) {
+      Integer leftId = leftIterator.next();
+      FilterQuery leftQuery = leftFilterQueries.getFilterQueryMap().get(leftId);
+
+      Iterator<Integer> rightIterator = new ArrayList<Integer>(rightIds).iterator();
+      while (rightIterator.hasNext()) {
+        Integer rightId = rightIterator.next();
+        FilterQuery rightQuery = rightFilterQueries.getFilterQueryMap().get(rightId);
+
+        boolean operatorsAreEqual = EqualityUtils.isEqual(leftQuery.getOperator(), rightQuery.getOperator());
+        boolean columnsAreEqual = EqualityUtils.isEqual(leftQuery.getColumn(), rightQuery.getColumn());
+        boolean fieldsAreEqual = columnsAreEqual &&
+            operatorsAreEqual &&
+            EqualityUtils.isEqual(leftQuery.getValue(), rightQuery.getValue());
+
+        // Compare sets if the op is IN
+        if (operatorsAreEqual && columnsAreEqual && leftQuery.getOperator() == FilterOperator.IN) {
+          Set<String> leftValues = new HashSet<String>(Arrays.asList(leftQuery.getValue().get(0).split("\t\t")));
+          Set<String> rightValues = new HashSet<String>(Arrays.asList(rightQuery.getValue().get(0).split("\t\t")));
+          fieldsAreEqual = leftValues.equals(rightValues);
+          if (!fieldsAreEqual) {
+            System.out.println("in clause not the same?");
+            System.out.println("leftValues = " + leftValues);
+            System.out.println("rightValues = " + rightValues);
+          }
+        }
+
+        if (fieldsAreEqual) {
+          if (filterQueryIsEquivalent(
+              leftQuery.getNestedFilterQueryIds(),
+              rightQuery.getNestedFilterQueryIds(),
+              leftFilterQueries,
+              rightFilterQueries
+          )) {
+            leftIterator.remove();
+            rightIterator.remove();
+          } else {
+            return false;
+          }
+        }
+      }
+    }
+
+    return leftIdsCopy.isEmpty();
   }
 }

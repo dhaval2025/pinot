@@ -93,27 +93,27 @@ public class ComparisonPredicateAstNode extends PredicateAstNode {
 
       if ("<".equals(_operand)) {
         if (identifierIsOnLeft) {
-          comparison = "[*\t\t" + value + ")";
+          comparison = "(*\t\t" + value + ")";
         } else {
-          comparison = "(" + value + "\t\t*]";
+          comparison = "(" + value + "\t\t*)";
         }
       } else if ("<=".equals(_operand)) {
         if (identifierIsOnLeft) {
-          comparison = "[*\t\t" + value + "]";
+          comparison = "(*\t\t" + value + "]";
         } else {
-          comparison = "[" + value + "\t\t*]";
+          comparison = "[" + value + "\t\t*)";
         }
       } else if (">".equals(_operand)) {
         if (identifierIsOnLeft) {
-          comparison = "(" + value + "\t\t*]";
+          comparison = "(" + value + "\t\t*)";
         } else {
-          comparison = "[*\t\t" + value + "*)";
+          comparison = "(*\t\t" + value + "*)";
         }
       } else if (">=".equals(_operand)) {
         if (identifierIsOnLeft) {
-          comparison = "[" + value + "\t\t*]";
+          comparison = "[" + value + "\t\t*)";
         } else {
-          comparison = "[*\t\t" + value + "*]";
+          comparison = "(*\t\t" + value + "*)";
         }
       } else {
         throw new AssertionError("Don't know how to convert this node");

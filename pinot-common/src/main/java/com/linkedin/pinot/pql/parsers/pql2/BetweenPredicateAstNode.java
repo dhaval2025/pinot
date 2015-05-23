@@ -54,6 +54,6 @@ public class BetweenPredicateAstNode extends PredicateAstNode {
   public FilterQueryTree buildFilterQueryTree() {
     LiteralAstNode left = (LiteralAstNode) getChildren().get(0);
     LiteralAstNode right = (LiteralAstNode) getChildren().get(1);
-    return new FilterQueryTree(_identifier, Collections.singletonList("[" + left + "\t\t" + right + "]"), FilterOperator.RANGE, null);
+    return new FilterQueryTree(_identifier, Collections.singletonList("[" + left.getValueAsString() + "\t\t" + right.getValueAsString() + "]"), FilterOperator.RANGE, null);
   }
 }

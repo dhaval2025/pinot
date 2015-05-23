@@ -16,8 +16,8 @@
 package com.linkedin.pinot.pql.parsers.pql2;
 
 import com.linkedin.pinot.common.request.FilterOperator;
+import com.linkedin.pinot.common.utils.StringUtil;
 import com.linkedin.pinot.common.utils.request.FilterQueryTree;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.TreeSet;
 
@@ -29,6 +29,7 @@ import java.util.TreeSet;
  */
 public class InPredicateAstNode extends PredicateAstNode {
   private String _identifier;
+  private static final boolean SINGLE_VALUE_IN_TO_EQUALITY = false;
 
   @Override
   public void addChild(AstNode childNode) {
@@ -63,8 +64,9 @@ public class InPredicateAstNode extends PredicateAstNode {
       }
     }
 
-    if (1 < values.size()) {
-      return new FilterQueryTree(_identifier, Arrays.asList(values.toArray(new String[values.size()])), FilterOperator.IN, null);
+    if (1 < values.size() || !SINGLE_VALUE_IN_TO_EQUALITY) {
+      String[] valueArray = values.toArray(new String[values.size()]);
+      return new FilterQueryTree(_identifier, Collections.singletonList(StringUtil.join("\t\t", valueArray)), FilterOperator.IN, null);
     } else {
       return new FilterQueryTree(_identifier, Collections.singletonList(values.first()), FilterOperator.EQUALITY, null);
     }
