@@ -15,7 +15,33 @@
  */
 package com.linkedin.pinot.pql.parsers;
 
-import com.linkedin.pinot.pql.parsers.pql2.*;
+import com.linkedin.pinot.pql.parsers.pql2.ast.AstNode;
+import com.linkedin.pinot.pql.parsers.pql2.ast.BetweenPredicateAstNode;
+import com.linkedin.pinot.pql.parsers.pql2.ast.BinaryMathOpAstNode;
+import com.linkedin.pinot.pql.parsers.pql2.ast.BooleanPredicateOpAstNode;
+import com.linkedin.pinot.pql.parsers.pql2.ast.ComparisonPredicateAstNode;
+import com.linkedin.pinot.pql.parsers.pql2.ast.ExpressionParenthesisGroupAstNode;
+import com.linkedin.pinot.pql.parsers.pql2.ast.FloatingPointLiteralAstNode;
+import com.linkedin.pinot.pql.parsers.pql2.ast.FunctionCallAstNode;
+import com.linkedin.pinot.pql.parsers.pql2.ast.GroupByAstNode;
+import com.linkedin.pinot.pql.parsers.pql2.ast.HavingAstNode;
+import com.linkedin.pinot.pql.parsers.pql2.ast.IdentifierAstNode;
+import com.linkedin.pinot.pql.parsers.pql2.ast.InPredicateAstNode;
+import com.linkedin.pinot.pql.parsers.pql2.ast.IntegerLiteralAstNode;
+import com.linkedin.pinot.pql.parsers.pql2.ast.IsPredicateAstNode;
+import com.linkedin.pinot.pql.parsers.pql2.ast.LimitAstNode;
+import com.linkedin.pinot.pql.parsers.pql2.ast.OrderByAstNode;
+import com.linkedin.pinot.pql.parsers.pql2.ast.OrderByExpressionAstNode;
+import com.linkedin.pinot.pql.parsers.pql2.ast.OutputColumnAstNode;
+import com.linkedin.pinot.pql.parsers.pql2.ast.OutputColumnListAstNode;
+import com.linkedin.pinot.pql.parsers.pql2.ast.PredicateParenthesisGroupAstNode;
+import com.linkedin.pinot.pql.parsers.pql2.ast.SelectAstNode;
+import com.linkedin.pinot.pql.parsers.pql2.ast.StarColumnListAstNode;
+import com.linkedin.pinot.pql.parsers.pql2.ast.StarExpressionAstNode;
+import com.linkedin.pinot.pql.parsers.pql2.ast.StringLiteralAstNode;
+import com.linkedin.pinot.pql.parsers.pql2.ast.TableNameAstNode;
+import com.linkedin.pinot.pql.parsers.pql2.ast.TopAstNode;
+import com.linkedin.pinot.pql.parsers.pql2.ast.WhereAstNode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -246,7 +272,11 @@ public class Pql2AstListener extends PQL2BaseListener {
 
   @Override
   public void enterInPredicate(@NotNull PQL2Parser.InPredicateContext ctx) {
-    pushNode(new InPredicateAstNode());
+    boolean isNotInClause = false;
+    if ("not".equalsIgnoreCase(ctx.getChild(0).getChild(1).getText())) {
+      isNotInClause = true;
+    }
+    pushNode(new InPredicateAstNode(isNotInClause));
   }
 
   @Override
