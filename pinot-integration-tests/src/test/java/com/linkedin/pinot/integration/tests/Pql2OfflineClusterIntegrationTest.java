@@ -76,12 +76,8 @@ public class Pql2OfflineClusterIntegrationTest extends BaseClusterIntegrationTes
   }
 
   protected void setUpTable(File schemaFile, int numBroker, int numOffline) throws Exception {
-    String brokerTenant = "offlineBroker";
-    String offlineTenant = "offlineServer";
-    createBrokerTenant(brokerTenant, numBroker);
-    createServerTenant(offlineTenant, numOffline, 0);
     addSchema(schemaFile, "schemaFile");
-    addOfflineTable("myresource", "DaysSinceEpoch", "daysSinceEpoch", 3000, "DAYS", brokerTenant, offlineTenant);
+    addOfflineTable("myresource", "DaysSinceEpoch", "daysSinceEpoch", 3000, "DAYS", null, null);
   }
 
   @BeforeClass
@@ -164,7 +160,7 @@ public class Pql2OfflineClusterIntegrationTest extends BaseClusterIntegrationTes
     for (String segmentName : _tarDir.list()) {
       System.out.println("Uploading segment " + (i++) + " : " + segmentName);
       File file = new File(_tarDir, segmentName);
-      FileUploadUtils.sendFile("localhost", "8998", segmentName, new FileInputStream(file), file.length());
+      FileUploadUtils.sendSegmentFile("localhost", "8998", segmentName, new FileInputStream(file), file.length());
     }
 
     // Wait for all segments to be online

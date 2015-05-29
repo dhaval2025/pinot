@@ -1,3 +1,18 @@
+/**
+ * Copyright (C) 2014-2015 LinkedIn Corp. (pinot-core@linkedin.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.linkedin.pinot.integration.tests;
 
 import com.linkedin.pinot.common.client.request.RequestConverter;
@@ -67,7 +82,7 @@ public class Pql2CompilerTest {
     PQLCompiler pql1Compiler = new PQLCompiler(new HashMap<String, String[]>());
     Pql2Compiler pql2Compiler = new Pql2Compiler();
 
-    for (int i = 1; i <= 1000000; i++) {
+    for (int i = 1; i <= 10000; i++) {
       String pql = qg.generateQuery().generatePql();
       testQuery(pql1Compiler, pql2Compiler, pql);
     }
@@ -80,11 +95,15 @@ public class Pql2CompilerTest {
     LineNumberReader reader = new LineNumberReader(new FileReader("pinot-integration-tests/src/test/resources/lots-of-bqls.log"));
 
     String line = reader.readLine();
+    int lineIndex = 0;
+    int targetLineIndex = 30512;
     while (line != null) {
-      if (!line.contains("com.senseidb.ba")) {
+      if (!line.contains("com.senseidb.ba") && targetLineIndex < lineIndex) {
+        System.out.println("lineIndex = " + lineIndex);
         testQuery(pql1Compiler, pql2Compiler, line);
       }
       line = reader.readLine();
+      lineIndex++;
     }
 
     reader.close();
@@ -108,6 +127,8 @@ public class Pql2CompilerTest {
         aggregationsAreEquivalent = false;
       } else {
         int aggregationsInfoCount = leftAggregationsInfo.size();
+        Set<AggregationInfo> leftAggregationInfos = new HashSet<AggregationInfo>();
+        Set<AggregationInfo> rightAggregationInfos = new HashSet<AggregationInfo>();
         for (int i = 0; i < aggregationsInfoCount; i++) {
           AggregationInfo leftInfo = leftAggregationsInfo.get(i);
           AggregationInfo rightInfo = rightAggregationsInfo.get(i);
@@ -121,11 +142,13 @@ public class Pql2CompilerTest {
                 ) {
               continue;
             } else {
-              aggregationsAreEquivalent = false;
-              break;
+              leftAggregationInfos.add(leftInfo);
+              rightAggregationInfos.add(rightInfo);
             }
           }
         }
+        aggregationsAreEquivalent = EqualityUtils.isEqualIgnoringOrder(new ArrayList(leftAggregationInfos),
+            new ArrayList(rightAggregationInfos));
       }
     }
 
@@ -206,21 +229,37 @@ public class Pql2CompilerTest {
         Integer rightId = rightIterator.next();
         FilterQuery rightQuery = rightFilterQueries.getFilterQueryMap().get(rightId);
 
-        boolean operatorsAreEqual = EqualityUtils.isEqual(leftQuery.getOperator(), rightQuery.getOperator());
+        FilterOperator leftOperator = leftQuery.getOperator();
+        FilterOperator rightOperator = rightQuery.getOperator();
+
+        boolean operatorsAreEqual = EqualityUtils.isEqual(leftOperator, rightOperator);
         boolean columnsAreEqual = EqualityUtils.isEqual(leftQuery.getColumn(), rightQuery.getColumn());
         boolean fieldsAreEqual = columnsAreEqual &&
             operatorsAreEqual &&
             EqualityUtils.isEqual(leftQuery.getValue(), rightQuery.getValue());
 
-        // Compare sets if the op is IN
-        if (operatorsAreEqual && columnsAreEqual && leftQuery.getOperator() == FilterOperator.IN) {
-          Set<String> leftValues = new HashSet<String>(Arrays.asList(leftQuery.getValue().get(0).split("\t\t")));
-          Set<String> rightValues = new HashSet<String>(Arrays.asList(rightQuery.getValue().get(0).split("\t\t")));
-          fieldsAreEqual = leftValues.equals(rightValues);
-          if (!fieldsAreEqual) {
-            System.out.println("in clause not the same?");
-            System.out.println("leftValues = " + leftValues);
-            System.out.println("rightValues = " + rightValues);
+        // If we're comparing on the same values, check that it's IN/EQUALITY or NOT_IN/NOT with a single value
+        if (!fieldsAreEqual && columnsAreEqual) {
+          boolean operatorsAreEquivalent =
+              (
+                  (leftOperator == FilterOperator.IN || leftOperator == FilterOperator.EQUALITY) &&
+                      (rightOperator == FilterOperator.IN || rightOperator == FilterOperator.EQUALITY)
+              ) ||
+              (
+                  (leftOperator == FilterOperator.NOT_IN || leftOperator == FilterOperator.NOT) &&
+                  (rightOperator == FilterOperator.NOT_IN || rightOperator == FilterOperator.NOT)
+              );
+
+          // Compare sets in this case
+          if (operatorsAreEquivalent) {
+            Set<String> leftValues = new HashSet<String>(Arrays.asList(leftQuery.getValue().get(0).split("\t\t")));
+            Set<String> rightValues = new HashSet<String>(Arrays.asList(rightQuery.getValue().get(0).split("\t\t")));
+            fieldsAreEqual = leftValues.equals(rightValues);
+            if (!fieldsAreEqual) {
+              System.out.println("in clause not the same?");
+              System.out.println("leftValues = " + leftValues);
+              System.out.println("rightValues = " + rightValues);
+            }
           }
         }
 
@@ -234,10 +273,19 @@ public class Pql2CompilerTest {
             leftIterator.remove();
             rightIterator.remove();
             break;
-          } else {
-            return false;
           }
         }
+      }
+    }
+
+    if (!leftIdsCopy.isEmpty()) {
+      System.out.println("Left over left filters");
+      for (Integer leftId : leftIdsCopy) {
+        System.out.println(leftFilterQueries.getFilterQueryMap().get(leftId));
+      }
+      System.out.println("Left over right filters");
+      for (Integer rightId : rightIdsCopy) {
+        System.out.println(rightFilterQueries.getFilterQueryMap().get(rightId));
       }
     }
 

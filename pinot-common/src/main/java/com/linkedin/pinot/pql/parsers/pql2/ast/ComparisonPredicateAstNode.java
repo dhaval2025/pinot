@@ -90,6 +90,9 @@ public class ComparisonPredicateAstNode extends PredicateAstNode {
 
       String comparison = null;
       String value = _literal.getValueAsString();
+      if ("".equals(value)) {
+        value = "*";
+      }
 
       if ("<".equals(_operand)) {
         if (identifierIsOnLeft) {
@@ -107,13 +110,13 @@ public class ComparisonPredicateAstNode extends PredicateAstNode {
         if (identifierIsOnLeft) {
           comparison = "(" + value + "\t\t*)";
         } else {
-          comparison = "(*\t\t" + value + "*)";
+          comparison = "(*\t\t" + value + ")";
         }
       } else if (">=".equals(_operand)) {
         if (identifierIsOnLeft) {
           comparison = "[" + value + "\t\t*)";
         } else {
-          comparison = "(*\t\t" + value + "*)";
+          comparison = "(*\t\t" + value + "]";
         }
       } else {
         throw new AssertionError("Don't know how to convert this node");

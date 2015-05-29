@@ -68,7 +68,7 @@ public class SelectAstNode extends AstNode {
   public void updateBrokerRequest(BrokerRequest brokerRequest) {
     // Set the query source
     QuerySource querySource = new QuerySource();
-    querySource.setResourceName(_resourceName);
+    querySource.setTableName(_resourceName);
     brokerRequest.setQuerySource(querySource);
 
     sendBrokerRequestUpdateToChildren(brokerRequest);

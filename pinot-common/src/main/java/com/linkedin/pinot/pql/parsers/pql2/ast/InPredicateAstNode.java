@@ -77,7 +77,7 @@ public class InPredicateAstNode extends PredicateAstNode {
       }
     }
 
-    if (1 < values.size() || !SINGLE_VALUE_IN_TO_EQUALITY) {
+    if (1 < values.size()) {
       String[] valueArray = values.toArray(new String[values.size()]);
       FilterOperator filterOperator;
       if (_isNotInClause) {
@@ -88,7 +88,13 @@ public class InPredicateAstNode extends PredicateAstNode {
       return new FilterQueryTree(_identifier, Collections.singletonList(StringUtil.join("\t\t", valueArray)),
           filterOperator, null);
     } else {
-      return new FilterQueryTree(_identifier, Collections.singletonList(values.first()), FilterOperator.EQUALITY, null);
+      FilterOperator filterOperator;
+      if (_isNotInClause) {
+        filterOperator = FilterOperator.NOT;
+      } else {
+        filterOperator = FilterOperator.EQUALITY;
+      }
+      return new FilterQueryTree(_identifier, Collections.singletonList(values.first()), filterOperator, null);
     }
   }
 }
