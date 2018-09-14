@@ -14,8 +14,6 @@ jobs: # a collection of steps
       - restore_cache: # restore the saved cache after the first run or if `pom.xml` has changed
           key: circleci-demo-{{ checksum "pom.xml" }}
       
-      - run: mvn dependency:go-offline # gets the project dependencies
-      
       - save_cache: # saves the project dependencies
           paths:
             - ~/.m2
@@ -39,8 +37,6 @@ jobs: # a collection of steps
 
       - restore_cache: # restore the saved cache after the first run or if `pom.xml` has changed
           key: circleci-demo-{{ checksum "pom.xml" }}
-      
-      - run: mvn dependency:go-offline # gets the project dependencies
       
       - save_cache: # saves the project dependencies
           paths:
